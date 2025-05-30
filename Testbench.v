@@ -1,55 +1,64 @@
-// Code your design here
-`include "phase1.v"
-`include "phase2.v"
-`include "phase3.v"
-`include "phase4.v"
-`include "phase5.v"
+// Code your testbench here
+// or browse Examples
 
-module top_module(
-    input wire clk,
-    input wire reset,
-    input wire code_in,
-    input wire [3:0] switch_in,
-    input wire [2:0] dir_in,
-    input wire [7:0] plate_in,
-    output wire [1:0] time_lock_out,
-    output reg all_done
-);
+module tb_top_module;
+    reg clk, reset;
+    reg code_in;
+    reg [3:0] switch_in;
+    reg [2:0] dir_in;
+    reg [7:0] plate_in;
+    wire [1:0] time_lock_out;
+    wire all_done;
 
-    wire phase1_done, phase1_fail;
-    wire phase2_done, phase2_fail;
-    wire phase3_done, phase3_fail;
-    wire phase4_done, phase4_fail;
-    wire phase5_done, phase5_fail;
+    top_module uut (
+        .clk(clk),
+        .reset(reset),
+        .code_in(code_in),
+        .switch_in(switch_in),
+        .dir_in(dir_in),
+        .plate_in(plate_in),
+        .time_lock_out(time_lock_out),
+        .all_done(all_done)
+    );
 
-    Phase1_FSM p1(clk, reset, code_in, phase1_done, phase1_fail);
-    Phase2_FSM p2(clk, reset, switch_in, phase2_done, phase2_fail);
-    Phase3_FSM p3(clk, reset, dir_in, phase3_done, phase3_fail);
-    Phase4_FSM p4(clk, reset, plate_in, phase4_done, phase4_fail);
-    Phase5_FSM p5(clk, reset, time_lock_out, phase5_done, phase5_fail);
-
-    reg [2:0] phase_state, next_phase;
-    localparam PHASE1=3'd1, PHASE2=3'd2, PHASE3=3'd3, PHASE4=3'd4, PHASE5=3'd5, DONE=3'd6;
-
-    always @(posedge clk or posedge reset) begin
-        if (reset)
-            phase_state <= PHASE1;
-        else
-            phase_state <= next_phase;
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk;  // 10 time units clock period
     end
 
-    always @(*) begin
-        next_phase = phase_state;
-        all_done = 0;
+    initial begin
+        // Waveform dump
+        $dumpfile("vault_all_phases.vcd");
+        $dumpvars(0, tb_top_module);
 
-        case(phase_state)
-            PHASE1: next_phase = (phase1_done) ? PHASE2 : (phase1_fail ? PHASE1 : PHASE1);
-            PHASE2: next_phase = (phase2_done) ? PHASE3 : (phase2_fail ? PHASE2 : PHASE2);
-            PHASE3: next_phase = (phase3_done) ? PHASE4 : (phase3_fail ? PHASE2 : PHASE3);
-            PHASE4: next_phase = (phase4_done) ? PHASE5 : (phase4_fail ? PHASE2 : PHASE4);
-            PHASE5: next_phase = (phase5_done) ? DONE : (phase5_fail ? PHASE2 : PHASE5);
-            DONE: all_done = 1;
-            default: next_phase = PHASE1;
-        endcase
+        // Reset system
+        reset = 1; code_in=0; switch_in=0; dir_in=0; plate_in=0;
+        #15 reset = 0;
+
+        // --- Phase 1: Code Lock (1 0 1 1) ---
+        #10 code_in = 1; #10 code_in = 0; #10 code_in = 1; #10 code_in = 1;
+
+        // --- Phase 2: Switch Room (1101) ---
+        #20 switch_in = 4'b1101;
+
+        // --- Phase 3: Maze Tracker (000 011 001 010 000) ---
+        #10 dir_in = 3'b000; #10 dir_in = 3'b011; #10 dir_in = 3'b001; #10 dir_in = 3'b010; #10 dir_in = 3'b000;
+
+        // --- Phase 4: Pressure Plates (10101010 11001100 11110000) ---
+        #10 plate_in = 8'b10101010; #10 plate_in = 8'b11001100; #10 plate_in = 8'b11110000;
+
+        // --- Let Phase 5 auto-run (Time-Lock Output) ---
+        #200;
+
+        // Reset to test fail paths (optional)
+        #10 reset = 1; #10 reset = 0;
+
+        // Optional: Add incorrect input sequences if needed
+        // #10 code_in = ...;
+        // #10 switch_in = ...;
+        // #10 dir_in = ...;
+        // #10 plate_in = ...;
+
+        #500 $finish;
     end
 endmodule
