@@ -1,4 +1,3 @@
-// Code your design here
 `include "phase1.v"
 `include "phase2.v"
 `include "phase3.v"
@@ -13,21 +12,30 @@ module top_module(
     input wire [2:0] dir_in,
     input wire [7:0] plate_in,
     output wire [1:0] time_lock_out,
-    output reg all_done
+    output reg all_done,
+    output wire alarm  // NEW: alarm output
 );
 
+    // Phase done and fail wires
     wire phase1_done, phase1_fail;
     wire phase2_done, phase2_fail;
     wire phase3_done, phase3_fail;
     wire phase4_done, phase4_fail;
     wire phase5_done, phase5_fail;
+    // NEW: alarm wires from each phase (dummy)
+    wire alarm1, alarm2, alarm3, alarm4, alarm5;
 
-    Phase1_FSM p1(clk, reset, code_in, phase1_done, phase1_fail);
-    Phase2_FSM p2(clk, reset, switch_in, phase2_done, phase2_fail);
-    Phase3_FSM p3(clk, reset, dir_in, phase3_done, phase3_fail);
-    Phase4_FSM p4(clk, reset, plate_in, phase4_done, phase4_fail);
-    Phase5_FSM p5(clk, reset, time_lock_out, phase5_done, phase5_fail);
+    // Instantiations with alarm signals
+    Phase1_FSM p1(clk, reset, code_in, phase1_done, phase1_fail, alarm1);
+    Phase2_FSM p2(clk, reset, switch_in, phase2_done, phase2_fail, alarm2);
+    Phase3_FSM p3(clk, reset, dir_in, phase3_done, phase3_fail, alarm3);
+    Phase4_FSM p4(clk, reset, plate_in, phase4_done, phase4_fail, alarm4);
+    Phase5_FSM p5(clk, reset, time_lock_out, phase5_done, phase5_fail, alarm5);
 
+    // Combine alarm signals (dummy, no actual triggers since we will set them inactive in phase files)
+    assign alarm = alarm1 | alarm2 | alarm3 | alarm4 | alarm5;
+
+    // Phase control logic
     reg [2:0] phase_state, next_phase;
     localparam PHASE1=3'd1, PHASE2=3'd2, PHASE3=3'd3, PHASE4=3'd4, PHASE5=3'd5, DONE=3'd6;
 
@@ -41,7 +49,6 @@ module top_module(
     always @(*) begin
         next_phase = phase_state;
         all_done = 0;
-
         case(phase_state)
             PHASE1: next_phase = (phase1_done) ? PHASE2 : (phase1_fail ? PHASE1 : PHASE1);
             PHASE2: next_phase = (phase2_done) ? PHASE3 : (phase2_fail ? PHASE2 : PHASE2);
@@ -53,4 +60,3 @@ module top_module(
         endcase
     end
 endmodule
-    
