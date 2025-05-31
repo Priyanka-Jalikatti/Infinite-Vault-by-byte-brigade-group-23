@@ -9,6 +9,7 @@ module tb_top_module;
     reg [7:0] plate_in;
     wire [1:0] time_lock_out;
     wire all_done;
+    wire alarm; // NEW: alarm signal
 
     top_module uut (
         .clk(clk),
@@ -18,7 +19,8 @@ module tb_top_module;
         .dir_in(dir_in),
         .plate_in(plate_in),
         .time_lock_out(time_lock_out),
-        .all_done(all_done)
+        .all_done(all_done),
+        .alarm(alarm)  // NEW: connected alarm
     );
 
     initial begin
@@ -50,14 +52,8 @@ module tb_top_module;
         // --- Let Phase 5 auto-run (Time-Lock Output) ---
         #200;
 
-        // Reset to test fail paths (optional)
+        // Optional reset
         #10 reset = 1; #10 reset = 0;
-
-        // Optional: Add incorrect input sequences if needed
-        // #10 code_in = ...;
-        // #10 switch_in = ...;
-        // #10 dir_in = ...;
-        // #10 plate_in = ...;
 
         #500 $finish;
     end
