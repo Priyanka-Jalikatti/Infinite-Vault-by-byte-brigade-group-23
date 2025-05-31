@@ -3,7 +3,8 @@ module Phase2_FSM(
     input wire reset,
     input wire [3:0] switch_in,
     output reg phase2_done,
-    output reg phase2_fail
+    output reg phase2_fail,
+    output reg alarm   // NEW: alarm output
 );
 
     reg [1:0] state, next_state;
@@ -20,6 +21,7 @@ module Phase2_FSM(
         next_state = state;
         phase2_done = 0;
         phase2_fail = 0;
+        alarm = 0;   // Keep alarm inactive
         case(state)
             IDLE: begin
                 if (switch_in == 4'b1101)
@@ -33,6 +35,7 @@ module Phase2_FSM(
             end
             FAIL: begin
                 phase2_fail = 1;
+                alarm = 0;  // Even in fail, keep alarm inactive for now
                 next_state = FAIL;
             end
         endcase
