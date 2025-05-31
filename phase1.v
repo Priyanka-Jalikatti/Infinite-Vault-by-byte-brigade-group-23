@@ -3,7 +3,8 @@ module Phase1_FSM(
     input wire reset,
     input wire code_in,
     output reg phase1_done,
-    output reg phase1_fail
+    output reg phase1_fail,
+    output reg alarm   // NEW: alarm output
 );
 
     reg [2:0] state, next_state;
@@ -20,6 +21,7 @@ module Phase1_FSM(
         next_state = state;
         phase1_done = 0;
         phase1_fail = 0;
+        alarm = 0;   // Keep alarm inactive
         case(state)
             S0: next_state = code_in ? S1 : S0;
             S1: next_state = code_in ? S1 : S2;
@@ -31,6 +33,7 @@ module Phase1_FSM(
             end
             FAIL: begin
                 phase1_fail = 1;
+                alarm = 0;  // Even in fail, keep alarm inactive for now
                 next_state = FAIL;
             end
             default: next_state = S0;
