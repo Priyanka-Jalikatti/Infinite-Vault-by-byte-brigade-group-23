@@ -3,7 +3,8 @@ module Phase3_FSM(
     input wire reset,
     input wire [2:0] dir_in,
     output reg phase3_done,
-    output reg phase3_fail
+    output reg phase3_fail,
+    output reg alarm   // NEW: alarm output
 );
 
     reg [2:0] state, next_state;
@@ -20,6 +21,7 @@ module Phase3_FSM(
         next_state = state;
         phase3_done = 0;
         phase3_fail = 0;
+        alarm = 0;   // Keep alarm inactive
         case(state)
             S0: next_state = (dir_in == 3'b000) ? S1 : FAIL;
             S1: next_state = (dir_in == 3'b011) ? S2 : FAIL;
@@ -32,6 +34,7 @@ module Phase3_FSM(
             end
             FAIL: begin
                 phase3_fail = 1;
+                alarm = 0;  // Even in fail, keep alarm inactive for now
                 next_state = FAIL;
             end
             default: next_state = S0;
