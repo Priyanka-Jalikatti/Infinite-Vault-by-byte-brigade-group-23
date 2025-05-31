@@ -3,7 +3,8 @@ module Phase4_FSM(
     input wire reset,
     input wire [7:0] plate_in,
     output reg phase4_done,
-    output reg phase4_fail
+    output reg phase4_fail,
+    output reg alarm   // NEW: alarm output
 );
 
     reg [2:0] state, next_state;
@@ -20,6 +21,7 @@ module Phase4_FSM(
         next_state = state;
         phase4_done = 0;
         phase4_fail = 0;
+        alarm = 0;   // Keep alarm inactive
         case(state)
             S0: next_state = (plate_in == 8'b10101010) ? S1 : FAIL;
             S1: next_state = (plate_in == 8'b11001100) ? S2 : FAIL;
@@ -30,6 +32,7 @@ module Phase4_FSM(
             end
             FAIL: begin
                 phase4_fail = 1;
+                alarm = 0;  // Even in fail, keep alarm inactive for now
                 next_state = FAIL;
             end
             default: next_state = S0;
