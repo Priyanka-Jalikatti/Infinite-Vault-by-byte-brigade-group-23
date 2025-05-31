@@ -3,7 +3,8 @@ module Phase5_FSM(
     input wire reset,
     output reg [1:0] time_lock_out,
     output reg phase5_done,
-    output reg phase5_fail
+    output reg phase5_fail,
+    output reg alarm   // NEW: alarm output
 );
 
     reg [2:0] state, next_state;
@@ -26,6 +27,7 @@ module Phase5_FSM(
         time_lock_out = 2'b00;
         phase5_done = 0;
         phase5_fail = 0;
+        alarm = 0;   // Keep alarm inactive
         case(state)
             S0: next_state = S1;
             S1: begin
@@ -46,9 +48,13 @@ module Phase5_FSM(
             end
             FAIL: begin
                 phase5_fail = 1;
+                alarm = 0;  // Even in fail, keep alarm inactive for now
                 next_state = FAIL;
             end
             default: next_state = FAIL;
         endcase
     end
 endmodule
+
+
+                
